@@ -336,11 +336,24 @@
         </div>
 
         <div class="card">
-          <h3>Progress</h3>
+          <div class="progress-head">
+            <h3>Progress</h3>
+            <span class="progress-pct mono" id="audit-progress-pct">0%</span>
+          </div>
           <div class="progress-bar-track" style="margin:14px 0">
             <div class="progress-bar-fill" id="audit-progress-fill"></div>
           </div>
           <pre id="audit-log" class="log"></pre>
+        </div>
+
+        <div class="card" id="audit-reports-card" style="display:none">
+          <div class="progress-head">
+            <h3>Generated reports</h3>
+            <button class="btn btn-ghost btn-sm" id="audit-reports-clear">Clear list</button>
+          </div>
+          <p class="help">A report appears here only once it is fully built. Click <strong>Download</strong> to save
+            the PPTX to your computer — nothing downloads automatically.</p>
+          <div id="audit-reports"></div>
         </div>
       </div>
 

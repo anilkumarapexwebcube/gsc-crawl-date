@@ -77,7 +77,12 @@
     logEl.appendChild(line);
     logEl.scrollTop = logEl.scrollHeight;
   }
-  function setProgress(pct) { progressFill.style.width = pct + '%'; }
+  const progressPct = $('audit-progress-pct');
+  function setProgress(pct) {
+    const v = Math.max(0, Math.min(100, Math.round(pct)));
+    progressFill.style.width = v + '%';
+    if (progressPct) progressPct.textContent = v + '%';
+  }
   function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
   // ===================== OAuth (Google Identity Services) =====================
@@ -316,18 +321,63 @@
     log(`  Building PPTX (${format})...`);
     const dataUrl = await buildPptxReport(reportData, format);
     const filename = `GSC_Audit_${format}_${domain.replace(/[^a-z0-9]/gi, '_')}_${endDate}.pptx`;
-    downloadDataUrl(dataUrl, filename);
-    log(`  Saved: ${filename}`, 'ok');
+    deliverReport(dataUrl, filename);
+    log(`  Report ready — click Download below: ${filename}`, 'ok');
   }
 
-  function downloadDataUrl(dataUrl, filename) {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  // ===================== report delivery + list =====================
+  const GENERATED = []; // { filename, url(blob), size }
+
+  function dataUrlToBlob(dataUrl) {
+    const [head, b64] = dataUrl.split(',');
+    const mime = (head.match(/data:([^;]+)/) || [])[1] || 'application/octet-stream';
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
   }
+
+  function deliverReport(dataUrl, filename) {
+    // No auto-download. The report is only added to the list once it is fully built,
+    // so its Download button is the only way to save it — and it only exists when ready.
+    const blob = dataUrlToBlob(dataUrl);
+    const url = URL.createObjectURL(blob); // kept alive so the Download button works
+    GENERATED.unshift({ filename, url, size: blob.size });
+    renderReports();
+  }
+
+  function fmtSize(bytes) {
+    if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+  }
+
+  function renderReports() {
+    const card = $('audit-reports-card');
+    const list = $('audit-reports');
+    if (!card || !list) return;
+    if (!GENERATED.length) { card.style.display = 'none'; list.innerHTML = ''; return; }
+    card.style.display = 'block';
+    list.innerHTML = GENERATED.map((r) =>
+      `<div class="report-row">
+        <div class="report-meta">
+          <span class="report-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          </span>
+          <div><div class="report-name">${escapeHtml(r.filename)}</div><div class="report-size mono">${fmtSize(r.size)} · PPTX</div></div>
+        </div>
+        <a class="btn btn-primary btn-sm" href="${r.url}" download="${escapeHtml(r.filename)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>`).join('');
+  }
+
+  const reportsClearBtn = $('audit-reports-clear');
+  if (reportsClearBtn) reportsClearBtn.addEventListener('click', () => {
+    GENERATED.forEach(r => { try { URL.revokeObjectURL(r.url); } catch (_) {} });
+    GENERATED.length = 0;
+    renderReports();
+  });
 
   // ===================== UI: subtabs =====================
   function switchSub(name) {

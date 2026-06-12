@@ -1406,3 +1406,24 @@ body.admin-mode .nav-admin-toggle{
   #gscui-toasts{left:14px;right:14px;top:14px}
   .gscui-toast{max-width:none}
 }
+
+/* ============================ AUDIT PROGRESS % + REPORTS ============================ */
+.progress-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.progress-head h3{margin:0}
+.progress-pct{font-weight:700;font-size:15px;color:var(--accent);letter-spacing:.5px}
+.report-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:13px 16px;border:1px solid var(--border-soft);border-radius:13px;
+  background:var(--surface-soft);margin-bottom:10px;
+}
+.report-row:last-child{margin-bottom:0}
+.report-meta{display:flex;align-items:center;gap:13px;min-width:0}
+.report-icon{
+  width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+}
+.report-icon svg{width:20px;height:20px}
+.report-name{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);word-break:break-all}
+.report-size{font-size:11px;color:var(--muted-2);margin-top:3px;letter-spacing:.4px}
+.report-row .btn{flex-shrink:0;text-decoration:none}
